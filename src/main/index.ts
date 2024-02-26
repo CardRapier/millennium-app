@@ -11,6 +11,12 @@ function createWindow(): void {
     height: 670,
     show: false,
     autoHideMenuBar: true,
+    center: true,
+    // frame: false,
+    // title: 'Millennium',
+    // vibrancy: 'under-window',
+    // visualEffectState: 'active',
+    // titleBarStyle: 'hidden',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

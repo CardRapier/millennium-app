@@ -2,10 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-body, html, #root, body > div:first-child > div:first-child, main {
+body, html, #root, #root > div:first-child,#root > div:first-child > div:first-child, main {
   height: 100%;
 }
 
 main {
-  padding: 8px;
+  padding: 8px 8px 8px 8px;
 }
