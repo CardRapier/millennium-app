@@ -1,4 +1,5 @@
 import {
+  Button,
   Input,
   Pagination,
   Spinner,
@@ -16,6 +17,15 @@ import { SearchIcon } from '@renderer/components/icons/SearchIcon'
 import React from 'react'
 
 export const Products = () => {
+  const ipcHandle = async (): Promise<void> => {
+    const test = await window.electron.ipcRenderer.invoke('pong', {
+      data: {
+        example: 'Hasta la cabina',
+        message: 'ping'
+      }
+    })
+    console.log(test)
+  }
   const [rawFilterText, setRawFilterText] = React.useState('')
   const [loading, setLoading] = React.useState(false)
   const [page, setPage] = React.useState(1)
@@ -71,6 +81,7 @@ export const Products = () => {
           value={rawFilterText}
           onValueChange={(event) => setRawFilterText(event)}
         />
+        <Button onClick={ipcHandle}>Ipc</Button>
       </div>
       <Table
         aria-label="Example table with dynamic content"

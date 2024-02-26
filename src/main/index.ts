@@ -19,9 +19,10 @@ function createWindow(): void {
     // titleBarStyle: 'hidden',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: true,
-      contextIsolation: true
+      nodeIntegration: true,
+      sandbox: false,
+      contextIsolation: true,
+      preload: join(__dirname, '../preload/index.js')
     }
   })
 
@@ -58,7 +59,10 @@ app.whenReady().then(() => {
   })
 
   // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  ipcMain.handle('pong', (_, arg) => {
+    console.log(arg)
+    return { message: 'solved' }
+  })
 
   createWindow()
 
