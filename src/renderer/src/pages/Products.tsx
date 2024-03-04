@@ -1,7 +1,6 @@
 import {
   Button,
   Input,
-  Pagination,
   Spinner,
   Table,
   TableBody,
@@ -9,45 +8,45 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-  getKeyValue
+  useDisclosure
 } from '@nextui-org/react'
+import { AsyncListData, useAsyncList } from '@react-stately/data'
 
-import { useAsyncList } from '@react-stately/data'
+import { useInfiniteScroll } from '@nextui-org/use-infinite-scroll'
+import { PlusIcon } from '@renderer/components/icons/PlusIcon'
 import { SearchIcon } from '@renderer/components/icons/SearchIcon'
+import CreateProduct from '@renderer/components/products/CreateProduct'
 import React from 'react'
 
+interface Product {
+  id: number
+  name: string
+  // description: string
+  price: number
+  iva: number
+  gross_margin: number
+}
+
 export const Products = () => {
-  const ipcHandle = async (): Promise<void> => {
-    const test = await window.electron.ipcRenderer.invoke('pong', {
-      data: {
-        example: 'Hasta la cabina',
-        message: 'ping'
-      }
-    })
-    console.log(test)
-  }
   const [rawFilterText, setRawFilterText] = React.useState('')
   const [loading, setLoading] = React.useState(false)
-  const [page, setPage] = React.useState(1)
-  let pages
-  const rowsPerPage = 1
+  const { isOpen, onOpen, onOpenChange } = useDisclosure()
 
-  const list = useAsyncList({
+  const list: AsyncListData<Product> = useAsyncList({
     async load({ filterText }) {
+      setLoading(true)
       const res = await fetch(`http://localhost:8080/products?search=${filterText}`)
       const json = await res.json()
-      pages = Math.ceil(json.length / rowsPerPage)
-      console.log(pages)
-
+      setLoading(false)
       return {
-        items: json
+        items: json.products
       }
     },
     async sort({ items, sortDescriptor }) {
       return {
         items: items.sort((a, b) => {
-          const first = a[sortDescriptor.column]
-          const second = b[sortDescriptor.column]
+          const first = a[sortDescriptor.column as keyof Product]
+          const second = b[sortDescriptor.column as keyof Product]
           let cmp = (parseInt(first) || first) < (parseInt(second) || second) ? -1 : 1
 
           if (sortDescriptor.direction === 'descending') {
@@ -59,6 +58,24 @@ export const Products = () => {
       }
     }
   })
+  const [loaderRef, scrollerRef] = useInfiniteScroll({ onLoadMore: list.loadMore })
+
+  const renderCell = React.useCallback((product: Product, columnKey: React.Key) => {
+    const cellValue = product[columnKey as keyof Product]
+
+    switch (columnKey) {
+      case 'actions':
+        return (
+          <div className="flex flex-row items-center">
+            <Button color="primary" size="sm">
+              Editar
+            </Button>
+          </div>
+        )
+      default:
+        return cellValue
+    }
+  }, [])
 
   //USE EFFECT FOR BOUNCING THE INPUT, SO REQUEST ARE NOT DONE EVERY HALF SECOND
   React.useEffect(() => {
@@ -70,49 +87,58 @@ export const Products = () => {
 
     return () => clearTimeout(timeout)
   }, [rawFilterText])
+
   return (
     <>
-      <div>
+      <div className="flex flex-row justify-between items-center p-2 pb-4">
         <Input
           isClearable
           className="w-full sm:max-w-[44%]"
-          placeholder="Search by name..."
+          placeholder="Buscar producto..."
           startContent={<SearchIcon />}
           value={rawFilterText}
           onValueChange={(event) => setRawFilterText(event)}
         />
-        <Button onClick={ipcHandle}>Ipc</Button>
+
+        <Button color="primary" endContent={<PlusIcon />} onPress={onOpen}>
+          Agregar
+        </Button>
       </div>
       <Table
         aria-label="Example table with dynamic content"
         sortDescriptor={list.sortDescriptor}
         onSortChange={list.sort}
+        baseRef={scrollerRef}
         bottomContent={
-          <div className="flex w-full justify-center">
-            <Pagination
-              isCompact
-              showControls
-              showShadow
-              color="secondary"
-              page={page}
-              total={pages}
-              onChange={(page) => setPage(page)}
-            />
-          </div>
+          loading ? (
+            <div className="flex w-full justify-center">
+              <Spinner ref={loaderRef} color="white" />
+            </div>
+          ) : null
         }
+        classNames={{
+          base: 'max-h-[520px] overflow-scroll',
+          table: 'min-h-[200px]'
+        }}
       >
         <TableHeader>
           <TableColumn key="id" allowsSorting>
             ID
           </TableColumn>
           <TableColumn key="name" allowsSorting>
-            Name
+            Nombre
           </TableColumn>
           <TableColumn key="iva" allowsSorting>
             IVA
           </TableColumn>
           <TableColumn key="price" allowsSorting>
-            Price
+            Precio
+          </TableColumn>
+          <TableColumn key="gross_margin" allowsSorting>
+            Margen
+          </TableColumn>
+          <TableColumn key="actions" align="center">
+            Acciones
           </TableColumn>
         </TableHeader>
         <TableBody
@@ -121,13 +147,15 @@ export const Products = () => {
           isLoading={loading}
           loadingContent={<Spinner />}
         >
-          {(item) => (
+          {(item: Product) => (
             <TableRow key={item.name}>
-              {(columnKey) => <TableCell>{getKeyValue(item, columnKey)}</TableCell>}
+              {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
             </TableRow>
           )}
         </TableBody>
       </Table>
+
+      <CreateProduct isOpen={isOpen} onOpenChange={onOpenChange} update={list.reload} />
     </>
   )
 }

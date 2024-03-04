@@ -59,7 +59,7 @@ app.whenReady().then(() => {
   })
 
   // IPC test
-  ipcMain.handle('pong', (_, arg) => {
+  ipcMain.handle('invoice', (_, arg) => {
     console.log(arg)
     return { message: 'solved' }
   })
