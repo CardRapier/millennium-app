@@ -16,6 +16,13 @@ import { LockIcon } from '../icons/LockIcon.jsx'
 import { MailIcon } from '../icons/MailIcon.jsx'
 
 const schema = yup.object().shape({
+  utc: yup
+    .string()
+    .required('UTC is required')
+    .length(12, 'UTC must have 12 numbers')
+    .test('isNum', 'Only numbers allowed', (value) => {
+      return /^\d+$/.test(value)
+    }),
   name: yup.string().required('Name is required'),
   price: yup.number().required('Price is required'),
   iva: yup.number().required('IVA is required'),
@@ -74,11 +81,14 @@ export default function CreateProduct({ isOpen, onOpenChange, update }) {
                 <ModalBody>
                   <Input
                     autoFocus
+                    {...register('utc')}
                     endContent={
                       <MailIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
                     }
                     label="Codigo"
                     variant="bordered"
+                    isInvalid={errors.utc ? true : false}
+                    errorMessage={errors.utc && errors.utc.message}
                   />
                   <Input
                     endContent={

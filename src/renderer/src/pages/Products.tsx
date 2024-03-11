@@ -19,9 +19,8 @@ import CreateProduct from '@renderer/components/products/CreateProduct'
 import React from 'react'
 
 interface Product {
-  id: number
+  utc: string
   name: string
-  // description: string
   price: number
   iva: number
   gross_margin: number
@@ -122,8 +121,8 @@ export const Products = () => {
         }}
       >
         <TableHeader>
-          <TableColumn key="id" allowsSorting>
-            ID
+          <TableColumn key="utc" allowsSorting>
+            Codigo
           </TableColumn>
           <TableColumn key="name" allowsSorting>
             Nombre

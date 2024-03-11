@@ -3,6 +3,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import React, { useState } from 'react'
 
 import axios from 'axios'
+import { DateTime } from 'luxon'
 
 export const Invoicing = () => {
   const [filterText, setFilterText] = useState('')
@@ -36,7 +37,14 @@ export const Invoicing = () => {
         total
       }
     })
-    console.log(response)
+    const invoice = {
+      products: cart,
+      date: DateTime.now().toMillis()
+    }
+    const responseInvoice = await axios.post('http://localhost:8080/invoice', invoice)
+
+    console.log(responseInvoice)
+    console.log(JSON.stringify(invoice))
   }
   return (
     <div className="flex flex-row py-4 h-full">
@@ -52,13 +60,13 @@ export const Invoicing = () => {
                 className="h-10"
                 isPressable
                 onClick={() => {
-                  if (cart[item.name]) {
-                    item.quantity = cart[item.name].quantity + 1
+                  if (cart[item.id]) {
+                    item.quantity = cart[item.id].quantity + 1
                   } else {
                     item.quantity = 1
                   }
                   setTotal(total + item.price)
-                  setCart({ ...cart, [item.name]: item })
+                  setCart({ ...cart, [item.id]: item })
                 }}
               >
                 <CardFooter className="text-small justify-between">
